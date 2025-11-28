@@ -54,7 +54,7 @@ export function Login() {
                             alt={item.title}
                             className="w-full h-full object-cover"
                         />
-                        <div className={`absolute inset-0 bg-gradient-to-br ${item.gradient}`}></div>
+                        <div className={`absolute inset-0 bg-gradient-to-br`}></div>
 
                         {/* Content Overlay */}
                         <div className="absolute inset-0 flex flex-col justify-end p-12 text-white">
