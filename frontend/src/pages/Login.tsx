@@ -15,17 +15,17 @@ export function Login() {
         {
             title: "Olympus Mons",
             description: "Olympus Mons is a large shield volcano on Mars. It is over 21.9km 13.6mi; 72,000ft high as measured by the Mars Orbiter Laser Altimeter.",
-            image: "https://upload.wikimedia.org/wikipedia/commons/c/c2/Olympus_Mons_-_ESA_Mars_Express_-_Flickr_-_Andrea_Luck.png"
+            image: "/wonders/olympus_mons.jpg"
         },
         {
             title: "Great Red Spot",
             description: "The Great Red Spot is a persistent high-pressure region in the atmosphere of Jupiter",
-            image: "https://upload.wikimedia.org/wikipedia/commons/d/dd/Jupiter_-_Great_Red_Spot_-_PJ7-60_61_62_-_Balanced_%2849803032983%29.png",
+            image: "/wonders/great_red_spot.png",
         },
         {
             title: "Mount Everest",
             description: "Mount Everest is Earth's highest mountain above sea level. ",
-            image: "https://upload.wikimedia.org/wikipedia/commons/b/b6/Mount_Everest_as_seen_from_Drukair2_PLW_edit_Cropped.jpg",
+            image: "/wonders/mount_everest.jpg",
         },
     ];
 

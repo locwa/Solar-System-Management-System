@@ -12,16 +12,16 @@ export function MenuBar() {
             <h2 className="text-3xl text-center py-6 font-semibold">Solar System Management System</h2>
             <hr/>
             <ul className="py-6 px-4">
-                <li className="py-3"><NavLink to="/home"
+                <li className="py-3"><NavLink to="/"
                                               className="w-[100%] text-left flex items-center"><FontAwesomeIcon
                     icon={["fas", "home"]} className="pr-3"/>Home</NavLink></li>
-                <li className="py-3"><NavLink to="/inventory"
+                <li className="py-3"><NavLink to="/planets"
                                               className="w-[100%] text-left flex items-center"><FontAwesomeIcon
                     icon={["fas", "earth-asia"]} className="pr-3"/> Planets</NavLink></li>
-                <li className="py-3"><NavLink to="/add-or-remove"
+                <li className="py-3"><NavLink to="/vote"
                                               className="w-[100%] text-left flex items-center"><FontAwesomeIcon
                     icon={["fas", "check-to-slot"]} className="pr-3"/>Vote</NavLink></li>
-                <li className="py-3"><NavLink to="/item-request"
+                <li className="py-3"><NavLink to="/request"
                                               className="w-[100%] text-left flex items-center"><FontAwesomeIcon
                     icon={["fas", "hand-holding-medical"]} className="pr-3"/>Request</NavLink></li>
                 <li className="py-3">
