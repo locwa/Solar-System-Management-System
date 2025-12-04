@@ -5,6 +5,7 @@ import session from 'express-session';
 import sequelize from './config/database'; // Corrected import path
 import authRouter from './routes/authRoutes';
 import planetRouter from './routes/planetRoutes';
+import citizenRouter from './routes/citizenRoutes'; // Added import for citizenRoutes
 
 const app = express();
 app.use(express.json());
@@ -14,7 +15,7 @@ app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
-  cookie: { 
+  cookie: {
     secure: false, // set true if HTTPS
     maxAge: 1000 * 60 * 60 // 1 hour
   }
@@ -23,6 +24,7 @@ app.use(session({
 // Routes
 app.use('/api/auth', authRouter);
 app.use('/api/planets', planetRouter);
+app.use('/api/citizens', citizenRouter); // Added citizen routes
 
 sequelize.sync().then(() => {
   console.log("Database synced");
