@@ -6,10 +6,10 @@ module.exports = {
       {
         PlanetID: 1,
         Name: "Alpha Centauri Bb",
-        Status: "Habitable",
+        Status: "Active",
         Population: 1000000,
-        Gravity: 1.2,
-        AtmosphericComposition: "Nitrogen, Oxygen",
+        CreatedBy: 1, // Assuming Galactic Leader with UserID 1 creates planets
+        CreatedDate: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
       },
@@ -18,8 +18,8 @@ module.exports = {
         Name: "Kepler-186f",
         Status: "Terraforming",
         Population: 0,
-        Gravity: 0.9,
-        AtmosphericComposition: "Carbon Dioxide, Nitrogen",
+        CreatedBy: 1, // Assuming Galactic Leader with UserID 1 creates planets
+        CreatedDate: new Date(),
         createdAt: new Date(),
         updatedAt: new Date(),
       },
