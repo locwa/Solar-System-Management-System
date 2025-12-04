@@ -1,6 +1,6 @@
 import { Request, Response } from 'express';
 import bcrypt from 'bcrypt';
-import { User } from '../models/User';
+import User from '../models/User';
 
 declare module 'express-session' {
   interface SessionData {
@@ -29,7 +29,7 @@ export const login = async (req: Request, res: Response) => {
         id: user.UserID,
         name: user.FullName,
         role: user.Role,
-        isGalactic: user.IsGalacticLeader
+        isGalactic: user.Role === 'Galactic Leader'
       };
   
       // Remember me (7 days)
@@ -72,7 +72,7 @@ export const register = async (req: Request, res: Response) => {
         Password: hashedPassword,
         FullName,
         Role,
-        IsGalacticLeader: Role === "Galactic Leader"
+        // Role is already set
       });
 
       res.json({
@@ -88,4 +88,3 @@ export const register = async (req: Request, res: Response) => {
       res.status(500).json({ error: (err as Error).message });
     }
   };
-  

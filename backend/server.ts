@@ -1,14 +1,17 @@
-require('dotenv').config();
+import dotenv from 'dotenv';
+dotenv.config();
 import express from 'express';
-const session = require('express-session');
-const sequelize = require('./config/db');
+import session from 'express-session';
+import sequelize from './config/database'; // Corrected import path
+import authRouter from './routes/authRoutes';
+import planetRouter from './routes/planetRoutes';
 
 const app = express();
 app.use(express.json());
 
 // Enable session middleware
 app.use(session({
-  secret: process.env.SESSION_SECRET,
+  secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
   cookie: { 
@@ -18,7 +21,8 @@ app.use(session({
 }));
 
 // Routes
-app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/auth', authRouter);
+app.use('/api/planets', planetRouter);
 
 sequelize.sync().then(() => {
   console.log("Database synced");
