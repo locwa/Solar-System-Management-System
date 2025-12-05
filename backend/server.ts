@@ -12,9 +12,12 @@ const app = express();
 
 // Enable CORS with explicit headers for preflight requests
 app.use(cors({
-  origin: ['https://ssms-websys.netlify.app', 'http://localhost:5173'], // Allow both Netlify and local development origins
+  origin: "https://ssms-websys.netlify.app",
+  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
   credentials: true
 }));
+
 app.use(express.json());
 
 // Enable session middleware
