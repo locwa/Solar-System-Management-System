@@ -2,6 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 import express from 'express';
 import session from 'express-session';
+import cors from 'cors';
 import sequelize from './config/database'; // Corrected import path
 import authRouter from './routes/authRoutes';
 import planetRouter from './routes/planetRoutes';
@@ -9,6 +10,12 @@ import citizenRouter from './routes/citizenRoutes'; // Added import for citizenR
 
 const app = express();
 app.use(express.json());
+
+// Enable CORS
+app.use(cors({
+  origin: 'https://ssms-websys.netlify.app',
+  credentials: true
+}));
 
 // Enable session middleware
 app.use(session({
