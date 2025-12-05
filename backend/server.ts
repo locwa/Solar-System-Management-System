@@ -10,21 +10,21 @@ import citizenRouter from './routes/citizenRoutes'; // Added import for citizenR
 
 const app = express();
 
-app.options("*", (req, res) => {
+app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "https://ssms-websys.netlify.app");
   res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
   res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
   res.header("Access-Control-Allow-Credentials", "true");
-  return res.sendStatus(200);
+
+  if (req.method === "OPTIONS") {
+    return res.status(200).end();
+  }
+
+  next();
 });
 
 // Enable CORS with explicit headers for preflight requests
-app.use(cors({
-  origin: "https://ssms-websys.netlify.app",
-  methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-  credentials: true
-}));
+app.use(cors());
 
 app.use(express.json());
 
