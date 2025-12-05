@@ -12,7 +12,7 @@ const app = express();
 
 // Enable CORS with explicit headers for preflight requests
 app.use(cors({
-  origin: ['https://ssms-websys.netlify.app', 'http://localhost:5173'], // Allow both Netlify and local development origins
+  origin: ['https://ssms-websys.netlify.app', 'http://localhost:5173', 'https://solar-system-management-system.vercel.app'], // Allow Netlify, localhost, and Vercel
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
@@ -25,7 +25,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // set true if HTTPS in production
+    secure: process.env.NODE_ENV === 'production',
     maxAge: 1000 * 60 * 60 // 1 hour
   }
 }));
