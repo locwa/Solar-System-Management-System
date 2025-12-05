@@ -63,7 +63,7 @@ export const getModificationRequestDetails = async (req: Request, res: Response)
     const citizen = await Citizen.findOne({
       where: {
         CitizenID: userId,
-        PlanetID: planetId,
+        PlanetID: parseInt(planetId),
       },
     });
 
@@ -73,8 +73,8 @@ export const getModificationRequestDetails = async (req: Request, res: Response)
 
     const proposal = await PlanetProposal.findOne({
       where: {
-        ProposalID: requestId,
-        PlanetID: planetId,
+        ProposalID: parseInt(requestId),
+        PlanetID: parseInt(planetId),
       },
       include: [
         { model: Planet, as: 'Planet' },
@@ -107,7 +107,7 @@ export const castVoteOnRequest = async (req: Request, res: Response) => {
     const citizen = await Citizen.findOne({
       where: {
         CitizenID: userId,
-        PlanetID: planetId,
+        PlanetID: parseInt(planetId),
       },
     });
 
@@ -117,8 +117,8 @@ export const castVoteOnRequest = async (req: Request, res: Response) => {
 
     const proposal = await PlanetProposal.findOne({
       where: {
-        ProposalID: requestId,
-        PlanetID: planetId,
+        ProposalID: parseInt(requestId),
+        PlanetID: parseInt(planetId),
         Status: 'Pending', // Only allow voting on pending proposals
       },
     });
@@ -130,7 +130,7 @@ export const castVoteOnRequest = async (req: Request, res: Response) => {
     // Check if the citizen has already voted on this proposal
     const existingVote = await Vote.findOne({
       where: {
-        ProposalID: requestId,
+        ProposalID: parseInt(requestId),
         VoterID: userId,
       },
     });
@@ -140,5 +140,17 @@ export const castVoteOnRequest = async (req: Request, res: Response) => {
     }
 
     if (!['For', 'Against'].includes(voteType)) {
-      return res.status(400).json({ error: 'Invalid vote type. Must be' });
+      return res.status(400).json({ error: 'Invalid vote type. Must be "For" or "Against"' });
     }
+
+    await Vote.create({
+      ProposalID: parseInt(requestId),
+      VoterID: userId,
+      VoteType: voteType,
+    });
+
+    res.status(201).json({ message: 'Vote cast successfully' });
+  } catch (error: unknown) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+};
