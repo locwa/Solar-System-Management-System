@@ -2,7 +2,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 import express from 'express';
 import session from 'express-session';
-import cors from 'cors';
+const cors = require('cors');
 import sequelize from './config/database'; // Corrected import path
 import authRouter from './routes/authRoutes';
 import planetRouter from './routes/planetRoutes';
@@ -23,7 +23,7 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false, // set true if HTTPS
+    secure: process.env.NODE_ENV === 'production', // set true if HTTPS in production
     maxAge: 1000 * 60 * 60 // 1 hour
   }
 }));
