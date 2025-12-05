@@ -5,7 +5,7 @@ declare module "express-session" {
   interface SessionData {
     user?: {
       id: number;
-      name: string;
+      username: string; // Changed from name to username
       role: string;
       isGalactic: boolean;
     };
