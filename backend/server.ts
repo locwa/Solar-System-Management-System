@@ -11,16 +11,10 @@ import citizenRouter from './routes/citizenRoutes'; // Added import for citizenR
 const app = express();
 
 // Enable CORS with explicit headers for preflight requests
-app.use((req, res, next) => {
-  res.header('Access-Control-Allow-Origin', 'https://ssms-websys.netlify.app');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
-  res.header('Access-Control-Allow-Credentials', 'true');
-  if (req.method === 'OPTIONS') {
-    res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET');
-    return res.status(200).json({});
-  }
-  next();
-});
+app.use(cors({
+  origin: ['https://ssms-websys.netlify.app', 'http://localhost:5173'], // Allow both Netlify and local development origins
+  credentials: true
+}));
 app.use(express.json());
 
 // Enable session middleware
