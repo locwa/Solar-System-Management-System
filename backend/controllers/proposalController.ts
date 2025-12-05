@@ -140,4 +140,5 @@ export const castVoteOnRequest = async (req: Request, res: Response) => {
     }
 
     if (!['For', 'Against'].includes(voteType)) {
-      return res.status(400).json({ error: 'Invalid vote type. Must be
+      return res.status(400).json({ error: 'Invalid vote type. Must be' });
+    }
