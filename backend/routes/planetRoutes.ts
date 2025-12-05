@@ -1,6 +1,6 @@
 import express from 'express';
 import { authorizeRoles } from '../middleware/roleAuth';
-import { createPlanet, getPlanet, updatePlanet, deletePlanet, assignPlanetaryLeader, listPlanets, getManagedPlanetDetails } from '../controllers/planetController';
+import { createPlanet, getPlanet, updatePlanet, deletePlanet, assignPlanetaryLeader, listPlanets, getManagedPlanetDetails, listPlanetaryLeaders } from '../controllers/planetController';
 import { authenticateSession } from '../middleware/sessionAuth';
 
 const router = express.Router();
@@ -8,7 +8,8 @@ const router = express.Router();
 // Galactic Leader Routes
 router.post('/', authenticateSession, authorizeRoles(['Galactic Leader']), createPlanet);
 router.get('/', authenticateSession, authorizeRoles(['Galactic Leader']), listPlanets);
-router.get('/:planetId', authenticateSession, authorizeRoles(['Galactic Leader']), getPlanet);
+router.get('/planetary-leaders', authenticateSession, authorizeRoles(['Galactic Leader']), listPlanetaryLeaders); // Route for listing planetary leaders
+router.get('/:planetId', authenticateSession, authorizeRoles(['Galactic Leader', 'Planetary Leader', 'Citizen']), getPlanet);
 router.put('/:planetId', authenticateSession, authorizeRoles(['Galactic Leader']), updatePlanet);
 router.delete('/:planetId', authenticateSession, authorizeRoles(['Galactic Leader']), deletePlanet);
 router.post('/:planetId/leader', authenticateSession, authorizeRoles(['Galactic Leader']), assignPlanetaryLeader);

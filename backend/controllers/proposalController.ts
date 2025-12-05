@@ -62,7 +62,7 @@ export const getModificationRequestDetails = async (req: Request, res: Response)
 
     const citizen = await Citizen.findOne({
       where: {
-        UserID: userId, // Corrected to UserID
+        CitizenID: userId, 
         PlanetID: parseInt(planetId),
       },
     });
@@ -106,7 +106,7 @@ export const castVoteOnRequest = async (req: Request, res: Response) => {
 
     const citizen = await Citizen.findOne({
       where: {
-        UserID: userId, // Corrected to UserID
+        CitizenID: userId, 
         PlanetID: parseInt(planetId),
       },
     });

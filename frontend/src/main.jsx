@@ -16,15 +16,14 @@ import { CitizensOnPlanet } from "./pages/CitizensOnPlanet.tsx";
 import { CitizenDetails } from "./pages/CitizenDetails.tsx";
 import { CreateCitizen } from "./pages/CreateCitizen.tsx";
 import { CitizenProfile } from "./pages/CitizenProfile.tsx";
-import { ModificationRequestDetails } from "./pages/ModificationRequestDetails.tsx"; // Import ModificationRequestDetails component
-import { AuthProvider, useAuth } from "./context/AuthContext.tsx";
+import { ModificationRequestDetails } from "./pages/ModificationRequestDetails.tsx";
 
-// PrivateRoute component to protect routes
+
 const PrivateRoute = ({ children, requiredRoles }) => {
   const { user, loading } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>; // Or a spinner
+    return <div>Loading...</div>; 
   }
 
   if (!user) {
@@ -32,7 +31,7 @@ const PrivateRoute = ({ children, requiredRoles }) => {
   }
 
   if (requiredRoles && !requiredRoles.includes(user.role)) {
-    return <Navigate to="/unauthorized" replace />; // Redirect to an unauthorized page
+    return <Navigate to="/unauthorized" replace />; 
   }
 
   return children;

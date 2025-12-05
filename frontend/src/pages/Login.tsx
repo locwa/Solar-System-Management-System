@@ -1,21 +1,21 @@
-import {useNavigate} from "react-router-dom"; // Changed to react-router-dom
-import {useState, useEffect} from "react"; // Removed useContext
-import { useAuth } from "../context/AuthContext.tsx"; // Import useAuth
-import React from "react"; // Explicitly import React for React.FormEvent
+import {useNavigate} from "react-router-dom"; 
+import {useState, useEffect} from "react"; 
+import { useAuth } from "../context/AuthContext.tsx";
+import React from "react";
 
 export function Login() {
     const navigate = useNavigate();
-    const { login, loading, user } = useAuth(); // Use useAuth hook
+    const { login, loading, user } = useAuth(); 
 
     const [currentSlide, setCurrentSlide] = useState(0);
-    const [username, setUsername] = useState(""); // Changed email to username
+    const [username, setUsername] = useState(""); 
     const [password, setPassword] = useState("");
     const [error, setError] = useState("");
-    const [isLoading, setIsLoading] = useState(false); // New loading state for login form
+    const [isLoading, setIsLoading] = useState(false); 
 
     useEffect(() => {
       if (!loading && user) {
-        navigate("/", { replace: true }); // Redirect to dashboard if already logged in
+        navigate("/", { replace: true }); 
       }
     }, [user, loading, navigate]);
 
@@ -30,12 +30,12 @@ export function Login() {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ Username: username, Password: password }), // Changed Email to Username
+                body: JSON.stringify({ Username: username, Password: password }), 
             });
 
             if (response.ok) {
                 const userData = await response.json();
-                login(userData.user); // Use the login function from AuthContext
+                login(userData.user); 
                 navigate("/", { replace: true });
             } else {
                 const errorData = await response.json();

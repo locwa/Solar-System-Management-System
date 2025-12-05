@@ -82,7 +82,7 @@ export const getCitizenDetails = async (req: Request, res: Response) => {
 // Create a new citizen (Planetary Leader only)
 export const createCitizen = async (req: Request, res: Response) => {
   try {
-    const { PlanetID, UserID } = req.body; // Removed CitizenName as it's not in the model
+    const { PlanetID, CitizenID } = req.body; // CitizenID should be the UserID of the user becoming a citizen
     const userId = res.locals.user.id;
     const userRole = res.locals.user.role;
 
@@ -101,13 +101,13 @@ export const createCitizen = async (req: Request, res: Response) => {
       return res.status(403).json({ error: "Unauthorized: You are not the leader of this planet" });
     }
 
-    // Check if the user already has a citizen profile
-    const existingCitizen = await Citizen.findOne({ where: { CitizenID: UserID } }); // Changed UserID to CitizenID to match model
+    // Check if the user already has a citizen profile (CitizenID is foreign key to UserID, so check UserID)
+    const existingCitizen = await Citizen.findOne({ where: { CitizenID: CitizenID } }); 
     if (existingCitizen) {
       return res.status(409).json({ error: "User is already a citizen" });
     }
 
-    const citizen = await Citizen.create({ PlanetID: parseInt(PlanetID), CitizenID: UserID }); // Changed UserID to CitizenID
+    const citizen = await Citizen.create({ PlanetID: parseInt(PlanetID), CitizenID: CitizenID }); 
     res.status(201).json(citizen);
   } catch (error: unknown) {
     res.status(500).json({ error: (error as Error).message });

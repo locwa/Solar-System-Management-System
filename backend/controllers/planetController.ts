@@ -143,7 +143,7 @@ export const assignPlanetaryLeader = async (req: Request, res: Response) => {
       PlanetID: planetId,
     });
     
-    // Update the user's role to "Planetary Leader" if they are not Galactic Leader already
+    // Update the user\"s role to "Planetary Leader" if they are not Galactic Leader already
     if (user.Role !== "Galactic Leader") {
       user.Role = "Planetary Leader";
       await user.save();
