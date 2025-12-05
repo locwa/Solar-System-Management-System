@@ -21,7 +21,7 @@ export const submitModificationRequest = async (req: Request, res: Response) => 
     const planetaryLeader = await PlanetaryLeader.findOne({
       where: {
         LeaderID: userId,
-        PlanetID: planetId,
+        PlanetID: parseInt(planetId),
       },
     });
 
@@ -29,7 +29,7 @@ export const submitModificationRequest = async (req: Request, res: Response) => 
       return res.status(403).json({ error: 'Unauthorized: You are not the leader of this planet' });
     }
 
-    const planet = await Planet.findByPk(planetId);
+    const planet = await Planet.findByPk(parseInt(planetId));
     if (!planet) {
       return res.status(404).json({ error: 'Planet not found' });
     }
@@ -62,7 +62,7 @@ export const getModificationRequestDetails = async (req: Request, res: Response)
 
     const citizen = await Citizen.findOne({
       where: {
-        CitizenID: userId,
+        UserID: userId, // Corrected to UserID
         PlanetID: parseInt(planetId),
       },
     });
@@ -106,7 +106,7 @@ export const castVoteOnRequest = async (req: Request, res: Response) => {
 
     const citizen = await Citizen.findOne({
       where: {
-        CitizenID: userId,
+        UserID: userId, // Corrected to UserID
         PlanetID: parseInt(planetId),
       },
     });

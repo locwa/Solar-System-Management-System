@@ -1,9 +1,9 @@
-import { Request, Response } from 'express';
-import Citizen from '../models/Citizen';
-import Planet from '../models/Planet';
-import User from '../models/User';
-import CitizenshipRequest from '../models/CitizenshipRequest';
-import PlanetaryLeader from '../models/PlanetaryLeader';
+import { Request, Response } from "express";
+import Citizen from "../models/Citizen";
+import Planet from "../models/Planet";
+import User from "../models/User";
+import CitizenshipRequest from "../models/CitizenshipRequest";
+import PlanetaryLeader from "../models/PlanetaryLeader";
 
 // Get a list of all citizens on a specific planet (Planetary Leader only)
 export const listCitizensOnPlanet = async (req: Request, res: Response) => {
@@ -12,24 +12,24 @@ export const listCitizensOnPlanet = async (req: Request, res: Response) => {
     const userId = res.locals.user.id;
     const userRole = res.locals.user.role;
 
-    if (userRole !== 'Planetary Leader') {
-      return res.status(403).json({ error: 'Unauthorized: Only Planetary Leaders can view citizens on their managed planet' });
+    if (userRole !== "Planetary Leader") {
+      return res.status(403).json({ error: "Unauthorized: Only Planetary Leaders can view citizens on their managed planet" });
     }
 
     const planetaryLeader = await PlanetaryLeader.findOne({
       where: {
         LeaderID: userId,
-        PlanetID: planetId,
+        PlanetID: parseInt(planetId),
       },
     });
 
     if (!planetaryLeader) {
-      return res.status(403).json({ error: 'Unauthorized: You are not the leader of this planet' });
+      return res.status(403).json({ error: "Unauthorized: You are not the leader of this planet" });
     }
 
     const citizens = await Citizen.findAll({
-      where: { PlanetID: planetId },
-      include: [{ model: User, as: 'User' }],
+      where: { PlanetID: parseInt(planetId) },
+      include: [{ model: User, as: "User" }],
     });
     res.json(citizens);
   } catch (error: unknown) {
@@ -44,16 +44,16 @@ export const getCitizenDetails = async (req: Request, res: Response) => {
     const userId = res.locals.user.id; // UserID from session
     const userRole = res.locals.user.role;
 
-    const citizen = await Citizen.findByPk(citizenId, {
-      include: [{ model: User, as: 'User' }, { model: Planet, as: 'Planet' }],
+    const citizen = await Citizen.findByPk(parseInt(citizenId), {
+      include: [{ model: User, as: "User" }, { model: Planet, as: "Planet" }],
     });
 
     if (!citizen) {
-      return res.status(404).json({ error: 'Citizen not found' });
+      return res.status(404).json({ error: "Citizen not found" });
     }
 
     // Check authorization
-    if (userRole === 'Planetary Leader') {
+    if (userRole === "Planetary Leader") {
       // A planetary leader can view any citizen on their planet
       const planetaryLeader = await PlanetaryLeader.findOne({
         where: {
@@ -62,15 +62,15 @@ export const getCitizenDetails = async (req: Request, res: Response) => {
         },
       });
       if (!planetaryLeader) {
-        return res.status(403).json({ error: 'Unauthorized: You are not the leader of this citizen\'s planet' });
+        return res.status(403).json({ error: "Unauthorized: You are not the leader of this citizen\"s planet" });
       }
-    } else if (userRole === 'Citizen') {
+    } else if (userRole === "Citizen") {
       // A citizen can only view their own details
-      if (citizen.UserID !== userId) {
-        return res.status(403).json({ error: 'Unauthorized: You can only view your own citizen details' });
+      if (citizen.CitizenID !== userId) { // Use CitizenID for comparison
+        return res.status(403).json({ error: "Unauthorized: You can only view your own citizen details" });
       }
     } else {
-      return res.status(403).json({ error: 'Unauthorized' });
+      return res.status(403).json({ error: "Unauthorized" });
     }
 
     res.json(citizen);
@@ -82,32 +82,32 @@ export const getCitizenDetails = async (req: Request, res: Response) => {
 // Create a new citizen (Planetary Leader only)
 export const createCitizen = async (req: Request, res: Response) => {
   try {
-    const { PlanetID, UserID, CitizenName } = req.body;
+    const { PlanetID, UserID } = req.body; // Removed CitizenName as it's not in the model
     const userId = res.locals.user.id;
     const userRole = res.locals.user.role;
 
-    if (userRole !== 'Planetary Leader') {
-      return res.status(403).json({ error: 'Unauthorized: Only Planetary Leaders can create citizens' });
+    if (userRole !== "Planetary Leader") {
+      return res.status(403).json({ error: "Unauthorized: Only Planetary Leaders can create citizens" });
     }
 
     const planetaryLeader = await PlanetaryLeader.findOne({
       where: {
         LeaderID: userId,
-        PlanetID: PlanetID,
+        PlanetID: parseInt(PlanetID),
       },
     });
 
     if (!planetaryLeader) {
-      return res.status(403).json({ error: 'Unauthorized: You are not the leader of this planet' });
+      return res.status(403).json({ error: "Unauthorized: You are not the leader of this planet" });
     }
 
     // Check if the user already has a citizen profile
-    const existingCitizen = await Citizen.findOne({ where: { UserID: UserID } });
+    const existingCitizen = await Citizen.findOne({ where: { CitizenID: UserID } }); // Changed UserID to CitizenID to match model
     if (existingCitizen) {
-      return res.status(409).json({ error: 'User is already a citizen' });
+      return res.status(409).json({ error: "User is already a citizen" });
     }
 
-    const citizen = await Citizen.create({ PlanetID, UserID, CitizenName });
+    const citizen = await Citizen.create({ PlanetID: parseInt(PlanetID), CitizenID: UserID }); // Changed UserID to CitizenID
     res.status(201).json(citizen);
   } catch (error: unknown) {
     res.status(500).json({ error: (error as Error).message });
@@ -121,13 +121,13 @@ export const removeCitizen = async (req: Request, res: Response) => {
     const userId = res.locals.user.id;
     const userRole = res.locals.user.role;
 
-    if (userRole !== 'Planetary Leader') {
-      return res.status(403).json({ error: 'Unauthorized: Only Planetary Leaders can remove citizens' });
+    if (userRole !== "Planetary Leader") {
+      return res.status(403).json({ error: "Unauthorized: Only Planetary Leaders can remove citizens" });
     }
 
-    const citizen = await Citizen.findByPk(citizenId);
+    const citizen = await Citizen.findByPk(parseInt(citizenId));
     if (!citizen) {
-      return res.status(404).json({ error: 'Citizen not found' });
+      return res.status(404).json({ error: "Citizen not found" });
     }
 
     const planetaryLeader = await PlanetaryLeader.findOne({
@@ -138,7 +138,7 @@ export const removeCitizen = async (req: Request, res: Response) => {
     });
 
     if (!planetaryLeader) {
-      return res.status(403).json({ error: 'Unauthorized: You are not the leader of this citizen\'s planet' });
+      return res.status(403).json({ error: "Unauthorized: You are not the leader of this citizen\"s planet" });
     }
 
     await citizen.destroy();
@@ -148,23 +148,23 @@ export const removeCitizen = async (req: Request, res: Response) => {
   }
 };
 
-// Get the citizen's own profile and status (Citizen only)
+// Get the citizen\"s own profile and status (Citizen only)
 export const getCitizenProfile = async (req: Request, res: Response) => {
   try {
     const { citizenId } = req.params;
     const userId = res.locals.user.id;
     const userRole = res.locals.user.role;
 
-    if (userRole !== 'Citizen') {
-      return res.status(403).json({ error: 'Unauthorized: Only Citizens can view their own profile' });
+    if (userRole !== "Citizen") {
+      return res.status(403).json({ error: "Unauthorized: Only Citizens can view their own profile" });
     }
 
-    const citizen = await Citizen.findByPk(citizenId, {
-      include: [{ model: User, as: 'User' }, { model: Planet, as: 'Planet' }],
+    const citizen = await Citizen.findByPk(parseInt(citizenId), {
+      include: [{ model: User, as: "User" }, { model: Planet, as: "Planet" }],
     });
 
-    if (!citizen || citizen.UserID !== userId) {
-      return res.status(403).json({ error: 'Unauthorized: Profile not found or does not belong to the authenticated user' });
+    if (!citizen || citizen.CitizenID !== userId) { // Use CitizenID for comparison
+      return res.status(403).json({ error: "Unauthorized: Profile not found or does not belong to the authenticated user" });
     }
 
     res.json(citizen);
@@ -181,43 +181,43 @@ export const requestCitizenshipChange = async (req: Request, res: Response) => {
     const userId = res.locals.user.id;
     const userRole = res.locals.user.role;
 
-    if (userRole !== 'Citizen') {
-      return res.status(403).json({ error: 'Unauthorized: Only Citizens can request citizenship changes' });
+    if (userRole !== "Citizen") {
+      return res.status(403).json({ error: "Unauthorized: Only Citizens can request citizenship changes" });
     }
 
-    const citizen = await Citizen.findByPk(citizenId);
-    if (!citizen || citizen.UserID !== userId) {
-      return res.status(403).json({ error: 'Unauthorized: Citizen not found or does not belong to the authenticated user' });
+    const citizen = await Citizen.findByPk(parseInt(citizenId));
+    if (!citizen || citizen.CitizenID !== userId) { // Use CitizenID for comparison
+      return res.status(403).json({ error: "Unauthorized: Citizen not found or does not belong to the authenticated user" });
     }
 
     // Check if new planet exists
-    const newPlanet = await Planet.findByPk(newPlanetId);
+    const newPlanet = await Planet.findByPk(parseInt(newPlanetId));
     if (!newPlanet) {
-      return res.status(404).json({ error: 'New planet not found' });
+      return res.status(404).json({ error: "New planet not found" });
     }
 
     // Prevent requesting transfer to the same planet
-    if (citizen.PlanetID === newPlanetId) {
-      return res.status(400).json({ error: 'Cannot request transfer to the current planet' });
+    if (citizen.PlanetID === parseInt(newPlanetId)) {
+      return res.status(400).json({ error: "Cannot request transfer to the current planet" });
     }
 
     // Check for existing pending request
     const existingRequest = await CitizenshipRequest.findOne({
       where: {
-        CitizenID: citizenId,
-        Status: 'Pending',
+        CitizenID: parseInt(citizenId),
+        Status: "Pending",
       },
     });
 
     if (existingRequest) {
-      return res.status(409).json({ error: 'Pending citizenship transfer request already exists' });
+      return res.status(409).json({ error: "Pending citizenship transfer request already exists" });
     }
 
     const citizenshipRequest = await CitizenshipRequest.create({
-      CitizenID: citizenId,
+      CitizenID: parseInt(citizenId),
       CurrentPlanetID: citizen.PlanetID,
-      RequestedPlanetID: newPlanetId,
-      Status: 'Pending', // Default status
+      RequestedPlanetID: parseInt(newPlanetId),
+      Status: "Pending", // Default status
       RequestDate: new Date(),
     });
 
@@ -234,26 +234,26 @@ export const getCitizenshipRequestStatus = async (req: Request, res: Response) =
     const userId = res.locals.user.id;
     const userRole = res.locals.user.role;
 
-    if (userRole !== 'Citizen') {
-      return res.status(403).json({ error: 'Unauthorized: Only Citizens can view their citizenship request status' });
+    if (userRole !== "Citizen") {
+      return res.status(403).json({ error: "Unauthorized: Only Citizens can view their citizenship request status" });
     }
 
-    const citizen = await Citizen.findByPk(citizenId);
-    if (!citizen || citizen.UserID !== userId) {
-      return res.status(403).json({ error: 'Unauthorized: Citizen not found or does not belong to the authenticated user' });
+    const citizen = await Citizen.findByPk(parseInt(citizenId));
+    if (!citizen || citizen.CitizenID !== userId) { // Use CitizenID for comparison
+      return res.status(403).json({ error: "Unauthorized: Citizen not found or does not belong to the authenticated user" });
     }
 
     const requests = await CitizenshipRequest.findAll({
-      where: { CitizenID: citizenId },
+      where: { CitizenID: parseInt(citizenId) },
       include: [
-        { model: Planet, as: 'CurrentPlanet' },
-        { model: Planet, as: 'RequestedPlanet' },
+        { model: Planet, as: "CurrentPlanet" },
+        { model: Planet, as: "RequestedPlanet" },
       ],
-      order: [['RequestDate', 'DESC']],
+      order: [["RequestDate", "DESC"]],
     });
 
     if (requests.length === 0) {
-      return res.status(404).json({ message: 'No citizenship transfer requests found for this citizen' });
+      return res.status(404).json({ message: "No citizenship transfer requests found for this citizen" });
     }
 
     res.json(requests);
