@@ -3,45 +3,37 @@ dotenv.config();
 import express from 'express';
 import session from 'express-session';
 import cors from 'cors';
-import sequelize from './config/database';
+import sequelize from './config/database'; // Corrected import path
 import authRouter from './routes/authRoutes';
 import planetRouter from './routes/planetRoutes';
-import citizenRouter from './routes/citizenRoutes';
+import citizenRouter from './routes/citizenRoutes'; // Added import for citizenRoutes
 
 const app = express();
 
-// 🔥 MUST BE FIRST — Add headers but DO NOT block OPTIONS
-app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "https://ssms-websys.netlify.app");
-    res.header("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, OPTIONS");
-    res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
-    res.header("Access-Control-Allow-Credentials", "true");
-    next();
-});
-
-// 🔥 Let CORS handle the OPTIONS response
+// Enable CORS with explicit headers for preflight requests
 app.use(cors({
-    origin: "https://ssms-websys.netlify.app",
-    methods: "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-    allowedHeaders: ["Content-Type", "Authorization"],
-    credentials: true,
+  origin: ['https://ssms-websys.netlify.app', 'http://localhost:5173'], // Allow both Netlify and local development origins
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
 }));
-
 app.use(express.json());
 
+// Enable session middleware
 app.use(session({
   secret: process.env.SESSION_SECRET || 'your-secret-key',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    maxAge: 1000 * 60 * 60
+    secure: process.env.NODE_ENV === 'production', // set true if HTTPS in production
+    maxAge: 1000 * 60 * 60 // 1 hour
   }
 }));
 
+// Routes
 app.use('/api/auth', authRouter);
 app.use('/api/planets', planetRouter);
-app.use('/api/citizens', citizenRouter);
+app.use('/api/citizens', citizenRouter); // Added citizen routes
 
 sequelize.sync().then(() => {
   console.log("Database synced");
