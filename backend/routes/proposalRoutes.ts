@@ -1,38 +1,30 @@
-import express from "express";
-import Proposal from "../models/Proposal";
-import { requireLogin, requireRole } from "../middleware/Auth";
+import express from 'express';
+import { authenticateSession } from '../middleware/sessionAuth';
+import { authorizeRoles } from '../middleware/roleAuth';
+import { submitModificationRequest, getModificationRequestDetails, castVoteOnRequest } from '../controllers/proposalController';
 
 const router = express.Router();
 
-// CREATE proposal — Citizens allowed
-router.post("/", requireLogin, async (req, res) => {
-  const proposal = await Proposal.create({
-    ...req.body,
-    creatorId: req.session.user.id
-  });
-  res.json(proposal);
-});
+// Planetary Leader Routes
+router.post(
+  '/planets/:planetId/modification-requests',
+  authenticateSession,
+  authorizeRoles(['Planetary Leader']),
+  submitModificationRequest
+);
 
-// LIST proposals
-router.get("/", async (req, res) => {
-  res.json(await Proposal.findAll());
-});
-
-// GET ONE
-router.get("/:id", async (req, res) => {
-  res.json(await Proposal.findByPk(req.params.id));
-});
-
-// UPDATE (Planet Leaders + Galactic Leaders)
-router.put("/:id", requireRole("PLANET_LEADER", "GALACTIC_LEADER"), async (req, res) => {
-  await Proposal.update(req.body, { where: { id: req.params.id } });
-  res.json({ message: "Proposal updated" });
-});
-
-// DELETE (Galactic Leaders only)
-router.delete("/:id", requireRole("GALACTIC_LEADER"), async (req, res) => {
-  await Proposal.destroy({ where: { id: req.params.id } });
-  res.json({ message: "Proposal deleted" });
-});
+// Citizen Routes
+router.get(
+  '/planets/:planetId/modification-requests/:requestId',
+  authenticateSession,
+  authorizeRoles(['Citizen']),
+  getModificationRequestDetails
+);
+router.post(
+  '/planets/:planetId/modification-requests/:requestId/vote',
+  authenticateSession,
+  authorizeRoles(['Citizen']),
+  castVoteOnRequest
+);
 
 export default router;
