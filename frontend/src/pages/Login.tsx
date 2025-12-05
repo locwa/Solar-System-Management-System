@@ -1,20 +1,58 @@
-import {useNavigate} from "react-router";
-import {useState, useEffect, useContext} from "react";
-export function Login() {
-    const [currentSlide, setCurrentSlide] = useState(0);
-    const loading = false
-    const [email, setEmail] = useState('');
-    const [password, setPassword] = useState('');
-    const [error, setError] = useState('');
+import {useNavigate} from "react-router-dom"; // Changed to react-router-dom
+import {useState, useEffect} from "react"; // Removed useContext
+import { useAuth } from "../context/AuthContext.tsx"; // Import useAuth
+import React from "react"; // Explicitly import React for React.FormEvent
 
-    const handleLogin = () => {
-        console.log("hello")
-    }
+export function Login() {
+    const navigate = useNavigate();
+    const { login, loading, user } = useAuth(); // Use useAuth hook
+
+    const [currentSlide, setCurrentSlide] = useState(0);
+    const [username, setUsername] = useState(""); // Changed email to username
+    const [password, setPassword] = useState("");
+    const [error, setError] = useState("");
+    const [isLoading, setIsLoading] = useState(false); // New loading state for login form
+
+    useEffect(() => {
+      if (!loading && user) {
+        navigate("/", { replace: true }); // Redirect to dashboard if already logged in
+      }
+    }, [user, loading, navigate]);
+
+    const handleLogin = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setIsLoading(true);
+        setError("");
+
+        try {
+            const response = await fetch("/api/auth/login", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ Username: username, Password: password }), // Changed Email to Username
+            });
+
+            if (response.ok) {
+                const userData = await response.json();
+                login(userData.user); // Use the login function from AuthContext
+                navigate("/", { replace: true });
+            } else {
+                const errorData = await response.json();
+                setError(errorData.message || "Login failed");
+            }
+        } catch (err) {
+            setError("Network error or server unavailable");
+            console.error("Login error:", err);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const carouselItems = [
         {
             title: "Olympus Mons",
-            description: "Olympus Mons is a large shield volcano on Mars. It is over 21.9km 13.6mi; 72,000ft high as measured by the Mars Orbiter Laser Altimeter.",
+            description: "Olympus Mons is a large shield volcano on Mars. It is over 21.9km 13.6mi; 72,000ft high as measured by the Mars Orbiter Laser Altimeter.",
             image: "https://upload.wikimedia.org/wikipedia/commons/c/c2/Olympus_Mons_-_ESA_Mars_Express_-_Flickr_-_Andrea_Luck.png"
         },
         {
@@ -46,7 +84,7 @@ export function Login() {
                     <div
                         key={index}
                         className={`absolute inset-0 transition-opacity duration-1000 ${
-                            index === currentSlide ? 'opacity-100' : 'opacity-0'
+                            index === currentSlide ? "opacity-100" : "opacity-0"
                         }`}
                     >
                         <img
@@ -97,8 +135,8 @@ export function Login() {
                             onClick={() => setCurrentSlide(index)}
                             className={`w-2 h-2 rounded-full transition-all ${
                                 index === currentSlide
-                                    ? 'bg-white w-8'
-                                    : 'bg-white/50 hover:bg-white/75'
+                                    ? "bg-white w-8"
+                                    : "bg-white/50 hover:bg-white/75"
                             }`}
                         />
                     ))}
@@ -119,17 +157,17 @@ export function Login() {
 
                         <form onSubmit={handleLogin}>
                             <div className="mb-5">
-                                <label htmlFor="email" className="block text-sm font-semibold text-gray-700 mb-2">
-                                    Email Address
+                                <label htmlFor="username" className="block text-sm font-semibold text-gray-700 mb-2">
+                                    Username
                                 </label>
                                 <input
-                                    type="email"
-                                    id="email"
-                                    name="email"
-                                    placeholder="Enter your email"
+                                    type="text"
+                                    id="username"
+                                    name="username"
+                                    placeholder="Enter your username"
                                     className="w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
-                                    value={email}
-                                    onChange={(e) => setEmail(e.target.value)}
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
                                     required
                                 />
                             </div>
@@ -162,9 +200,9 @@ export function Login() {
                             <button
                                 type="submit"
                                 className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg font-semibold hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                                disabled={loading}
+                                disabled={isLoading}
                             >
-                                {loading ? (
+                                {isLoading ? (
                                     <span className="flex items-center justify-center gap-2">
                                         <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
                                             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/>
@@ -172,7 +210,7 @@ export function Login() {
                                         </svg>
                                         Signing in...
                                     </span>
-                                ) : 'Sign In'}
+                                ) : "Sign In"}
                             </button>
                         </form>
                     </div>

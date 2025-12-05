@@ -1,17 +1,67 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import {BrowserRouter, Route, Routes} from "react-router";
-import './index.css'
-import {DashboardTemplate} from "./templates/DashboardTemplate.tsx";
-import {Login} from "./pages/Login.tsx";
+import { StrictMode } from "react"
+import { createRoot } from "react-dom/client"
+import {BrowserRouter, Route, Routes, Navigate} from "react-router-dom";
+import "./index.css"
+import { DashboardTemplate } from "./templates/DashboardTemplate.tsx";
+import { Login } from "./pages/Login.tsx";
+import { Home } from "./pages/Home.tsx";
+import { Planets } from "./pages/Planets.tsx";
+import { PlanetDetails } from "./pages/PlanetDetails.tsx";
+import { CreatePlanet } from "./pages/CreatePlanet.tsx";
+import { AssignLeader } from "./pages/AssignLeader.tsx";
+import { PlanetaryLeaders } from "./pages/PlanetaryLeaders.tsx";
+import { ManagedPlanetDetails } from "./pages/ManagedPlanetDetails.tsx";
+import { SubmitModificationRequest } from "./pages/SubmitModificationRequest.tsx";
+import { CitizensOnPlanet } from "./pages/CitizensOnPlanet.tsx";
+import { CitizenDetails } from "./pages/CitizenDetails.tsx";
+import { CreateCitizen } from "./pages/CreateCitizen.tsx";
+import { CitizenProfile } from "./pages/CitizenProfile.tsx";
+import { ModificationRequestDetails } from "./pages/ModificationRequestDetails.tsx"; // Import ModificationRequestDetails component
+import { AuthProvider, useAuth } from "./context/AuthContext.tsx";
 
-createRoot(document.getElementById('root')).render(
+// PrivateRoute component to protect routes
+const PrivateRoute = ({ children, requiredRoles }) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <div>Loading...</div>; // Or a spinner
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (requiredRoles && !requiredRoles.includes(user.role)) {
+    return <Navigate to="/unauthorized" replace />; // Redirect to an unauthorized page
+  }
+
+  return children;
+};
+
+createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <BrowserRouter>
-        <Routes>
-            <Route path="/" element={<DashboardTemplate/>}/>
-            <Route path="/login" element={<Login/>}/>
-        </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+          <Routes>
+              <Route path="/login" element={<Login/>}/>
+              <Route path="/" element={<PrivateRoute><DashboardTemplate><Home /></DashboardTemplate></PrivateRoute>}/>
+              <Route path="/home" element={<PrivateRoute><DashboardTemplate><Home /></DashboardTemplate></PrivateRoute>}/>
+              <Route path="/planets" element={<PrivateRoute requiredRoles={["Galactic Leader", "Planetary Leader", "Citizen"]}><DashboardTemplate><Planets /></DashboardTemplate></PrivateRoute>}/>
+              <Route path="/planets/:planetId" element={<PrivateRoute requiredRoles={["Galactic Leader", "Planetary Leader", "Citizen"]}><DashboardTemplate><PlanetDetails /></DashboardTemplate></PrivateRoute>}/>
+              <Route path="/planets/create" element={<PrivateRoute requiredRoles={["Galactic Leader"]}><DashboardTemplate><CreatePlanet /></DashboardTemplate></PrivateRoute>}/>
+              <Route path="/planets/:planetId/assign-leader" element={<PrivateRoute requiredRoles={["Galactic Leader"]}><DashboardTemplate><AssignLeader /></DashboardTemplate></PrivateRoute>}/>
+              <Route path="/planetary-leaders" element={<PrivateRoute requiredRoles={["Galactic Leader"]}><DashboardTemplate><PlanetaryLeaders /></DashboardTemplate></PrivateRoute>}/>
+              <Route path="/planets/:planetId/managed-details" element={<PrivateRoute requiredRoles={["Planetary Leader"]}><DashboardTemplate><ManagedPlanetDetails /></DashboardTemplate></PrivateRoute>}/>
+              <Route path="/planets/:planetId/submit-request" element={<PrivateRoute requiredRoles={["Planetary Leader"]}><DashboardTemplate><SubmitModificationRequest /></DashboardTemplate></PrivateRoute>}/>
+              <Route path="/planets/:planetId/citizens" element={<PrivateRoute requiredRoles={["Planetary Leader"]}><DashboardTemplate><CitizensOnPlanet /></DashboardTemplate></PrivateRoute>}/>
+              <Route path="/citizens/:citizenId" element={<PrivateRoute requiredRoles={["Planetary Leader", "Citizen"]}><DashboardTemplate><CitizenDetails /></DashboardTemplate></PrivateRoute>}/>
+              <Route path="/planets/:planetId/citizens/create" element={<PrivateRoute requiredRoles={["Planetary Leader"]}><DashboardTemplate><CreateCitizen /></DashboardTemplate></PrivateRoute>}/>
+              <Route path="/citizens/:citizenId/profile" element={<PrivateRoute requiredRoles={["Citizen"]}><DashboardTemplate><CitizenProfile /></DashboardTemplate></PrivateRoute>}/>
+              <Route path="/planets/:planetId/modification-requests/:requestId" element={<PrivateRoute requiredRoles={["Citizen"]}><DashboardTemplate><ModificationRequestDetails /></DashboardTemplate></PrivateRoute>}/> {/* Route for ModificationRequestDetails */}
+              {/* Add other protected routes here */}
+              <Route path="/unauthorized" element={<div>You do not have permission to view this page.</div>} />
+          </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   </StrictMode>,
 )
