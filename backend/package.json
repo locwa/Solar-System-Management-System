@@ -11,7 +11,8 @@
     "seed": "npx sequelize db:seed",
     "seed:all": "npx sequelize db:seed:all",
     "seed:undo:all": "npx sequelize db:seed:undo:all",
-    "seed:show": "npx sequelize db:seed:status"
+    "seed:show": "npx sequelize db:seed:status",
+    "postinstall": "npm install pg"
   },
   "keywords": [],
   "author": "",
