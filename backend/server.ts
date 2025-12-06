@@ -7,6 +7,7 @@ import sequelize from './config/database';
 import authRouter from './routes/authRoutes';
 import planetRouter from './routes/planetRoutes';
 import citizenRouter from './routes/citizenRoutes';
+import 'pg' 
 
 const app = express();
 
