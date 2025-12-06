@@ -47,12 +47,7 @@ app.use('/api', citizenRouter);
 
 const PORT = process.env.BACKEND_PORT || 3000;
 
-sequelize.sync().then(() => {
-  console.log("Database synced");
-  app.listen(PORT, () => console.log(`Backend server running on port ${PORT}`));
-}).catch((err: Error) => {
-  console.error("Database connection failed:", err.message);
-});
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
 
 
 export default serverless(app);
