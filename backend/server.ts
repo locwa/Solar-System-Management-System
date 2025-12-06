@@ -7,8 +7,8 @@ import sequelize from './config/database';
 import authRouter from './routes/authRoutes';
 import planetRouter from './routes/planetRoutes';
 import citizenRouter from './routes/citizenRoutes';
-import 'connect-pg-simple'
-import 'pg'
+import pgSession from 'connect-pg-simple'
+import pg from 'pg'
 import serverless from 'serverless-http';
 
 const app = express();
