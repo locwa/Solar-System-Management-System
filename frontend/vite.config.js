@@ -9,13 +9,14 @@ export default defineConfig({
   ],
   server: {
     host: '0.0.0.0',
-    port: 4000,
+    port: 5000,
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'https://solar-system-management-system.vercel.app/',
+        target: 'https://solar-system-management-system.vercel.app',
         changeOrigin: true,
         secure: false,
+          rewrite: (path) => path.replace(/^\/api/, ''),
       }
     }
   }
