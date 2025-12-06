@@ -16,7 +16,6 @@ export default defineConfig({
         target: 'https://solar-system-management-system.vercel.app',
         changeOrigin: true,
         secure: false,
-          rewrite: (path) => path.replace(/^\/api/, ''),
       }
     }
   }
