@@ -7,7 +7,9 @@ import sequelize from './config/database';
 import authRouter from './routes/authRoutes';
 import planetRouter from './routes/planetRoutes';
 import citizenRouter from './routes/citizenRoutes';
-import 'pg' 
+import 'connect-pg-simple'
+import 'pg'
+import serverless from 'serverless-http';
 
 const app = express();
 
@@ -18,7 +20,16 @@ app.use(cors({
 
 app.use(express.json());
 
+const PgSessionStore = pgSession(session);
+
 app.use(session({
+  store: new PgSessionStore({
+    pool: new pg.Pool({
+      connectionString: process.env.DATABASE_URL,
+    }),
+    tableName: 'session',
+  }),
+
   secret: process.env.SESSION_SECRET || 'solar-system-secret-key',
   resave: false,
   saveUninitialized: false,
@@ -42,3 +53,6 @@ sequelize.sync().then(() => {
 }).catch((err: Error) => {
   console.error("Database connection failed:", err.message);
 });
+
+
+export const handler = serverless(app);
