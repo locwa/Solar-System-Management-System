@@ -6,11 +6,162 @@ import Vote from '../models/Vote';
 import PlanetaryLeader from '../models/PlanetaryLeader';
 import Citizen from '../models/Citizen';
 
-// Submit a new modification request (initiates a vote) (Planetary Leader only)
+export const listAllProposals = async (req: Request, res: Response) => {
+  try {
+    const userRole = res.locals.user.role;
+
+    if (userRole !== 'Galactic Leader') {
+      return res.status(403).json({ error: 'Unauthorized: Only Galactic Leaders can view all proposals' });
+    }
+
+    const proposals = await PlanetProposal.findAll({
+      include: [
+        { model: Planet, as: 'Planet' },
+        { model: User, as: 'Proposer' },
+        { model: User, as: 'Decider' },
+        { model: Vote, as: 'Votes' },
+      ],
+      order: [['DateProposed', 'DESC']],
+    });
+
+    res.json(proposals);
+  } catch (error: unknown) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+};
+
+export const getProposalById = async (req: Request, res: Response) => {
+  try {
+    const { proposalId } = req.params;
+    const userRole = res.locals.user.role;
+
+    if (userRole !== 'Galactic Leader') {
+      return res.status(403).json({ error: 'Unauthorized: Only Galactic Leaders can view proposal details' });
+    }
+
+    const proposal = await PlanetProposal.findByPk(proposalId, {
+      include: [
+        { model: Planet, as: 'Planet' },
+        { model: User, as: 'Proposer' },
+        { model: User, as: 'Decider' },
+        { model: Vote, as: 'Votes', include: [{ model: Citizen, as: 'Voter', include: [{ model: User, as: 'User' }] }] },
+      ],
+    });
+
+    if (!proposal) {
+      return res.status(404).json({ error: 'Proposal not found' });
+    }
+
+    const forVotes = await Vote.count({ where: { ProposalID: proposalId, VoteChoice: 'For' } });
+    const againstVotes = await Vote.count({ where: { ProposalID: proposalId, VoteChoice: 'Against' } });
+
+    res.json({
+      ...proposal.toJSON(),
+      voteSummary: { for: forVotes, against: againstVotes, total: forVotes + againstVotes },
+    });
+  } catch (error: unknown) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+};
+
+export const decideProposal = async (req: Request, res: Response) => {
+  try {
+    const { proposalId } = req.params;
+    const { decision } = req.body;
+    const userId = res.locals.user.id;
+    const userRole = res.locals.user.role;
+
+    if (userRole !== 'Galactic Leader') {
+      return res.status(403).json({ error: 'Unauthorized: Only Galactic Leaders can decide on proposals' });
+    }
+
+    if (!['Approved', 'Rejected'].includes(decision)) {
+      return res.status(400).json({ error: "Invalid decision. Must be 'Approved' or 'Rejected'" });
+    }
+
+    const proposal = await PlanetProposal.findByPk(proposalId, {
+      include: [{ model: Planet, as: 'Planet' }],
+    });
+
+    if (!proposal) {
+      return res.status(404).json({ error: 'Proposal not found' });
+    }
+
+    if (proposal.Status !== 'Pending') {
+      return res.status(400).json({ error: 'Proposal has already been decided' });
+    }
+
+    await proposal.update({
+      Status: decision,
+      DecisionBy: userId,
+      DecisionDate: new Date(),
+    });
+
+    if (decision === 'Approved' && proposal.Planet) {
+      if (proposal.ProposalType === 'Terraform') {
+        await proposal.Planet.update({ Status: 'Terraforming' });
+      } else if (proposal.ProposalType === 'Destruction') {
+        await proposal.Planet.update({ Status: 'Destroyed' });
+      }
+    }
+
+    res.json({ message: `Proposal ${decision.toLowerCase()} successfully`, proposal });
+  } catch (error: unknown) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+};
+
+export const getProposalsForCitizen = async (req: Request, res: Response) => {
+  try {
+    const userId = res.locals.user.id;
+    const userRole = res.locals.user.role;
+
+    if (userRole !== 'Citizen') {
+      return res.status(403).json({ error: 'Unauthorized: Only Citizens can view their planet proposals' });
+    }
+
+    const citizen = await Citizen.findOne({ where: { CitizenID: userId } });
+
+    if (!citizen) {
+      return res.status(404).json({ error: 'Citizen record not found' });
+    }
+
+    const proposals = await PlanetProposal.findAll({
+      where: { PlanetID: citizen.PlanetID, Status: 'Pending' },
+      include: [
+        { model: Planet, as: 'Planet' },
+        { model: User, as: 'Proposer' },
+      ],
+      order: [['DateProposed', 'DESC']],
+    });
+
+    const proposalsWithVoteStatus = await Promise.all(
+      proposals.map(async (proposal) => {
+        const existingVote = await Vote.findOne({
+          where: { ProposalID: proposal.ProposalID, CitizenID: userId },
+        });
+        const forVotes = await Vote.count({ where: { ProposalID: proposal.ProposalID, VoteChoice: 'For' } });
+        const againstVotes = await Vote.count({ where: { ProposalID: proposal.ProposalID, VoteChoice: 'Against' } });
+        
+        return {
+          ...proposal.toJSON(),
+          hasVoted: !!existingVote,
+          userVote: existingVote?.VoteChoice || null,
+          voteSummary: { for: forVotes, against: againstVotes },
+        };
+      })
+    );
+
+    res.json(proposalsWithVoteStatus);
+  } catch (error: unknown) {
+    res.status(500).json({ error: (error as Error).message });
+  }
+};
+
 export const submitModificationRequest = async (req: Request, res: Response) => {
   try {
     const { planetId } = req.params;
-    const { title, description } = req.body;
+    const { title, description, proposalType } = req.body;
     const userId = res.locals.user.id;
     const userRole = res.locals.user.role;
 
@@ -21,7 +172,7 @@ export const submitModificationRequest = async (req: Request, res: Response) => 
     const planetaryLeader = await PlanetaryLeader.findOne({
       where: {
         LeaderID: userId,
-        PlanetID: parseInt(planetId),
+        PlanetID: planetId,
       },
     });
 
@@ -29,18 +180,18 @@ export const submitModificationRequest = async (req: Request, res: Response) => 
       return res.status(403).json({ error: 'Unauthorized: You are not the leader of this planet' });
     }
 
-    const planet = await Planet.findByPk(parseInt(planetId));
+    const planet = await Planet.findByPk(planetId);
     if (!planet) {
       return res.status(404).json({ error: 'Planet not found' });
     }
 
     const proposal = await PlanetProposal.create({
       PlanetID: parseInt(planetId),
-      ProposerID: userId,
-      Title: title,
-      Description: description,
+      ProposedBy: userId,
+      ProposalType: proposalType || 'Terraform',
+      Details: description || title,
       Status: 'Pending',
-      ProposedDate: new Date(),
+      DateProposed: new Date(),
     });
 
     res.status(201).json(proposal);
@@ -49,7 +200,6 @@ export const submitModificationRequest = async (req: Request, res: Response) => 
   }
 };
 
-// View details of a specific modification request before voting (Citizen only)
 export const getModificationRequestDetails = async (req: Request, res: Response) => {
   try {
     const { planetId, requestId } = req.params;
@@ -62,8 +212,8 @@ export const getModificationRequestDetails = async (req: Request, res: Response)
 
     const citizen = await Citizen.findOne({
       where: {
-        CitizenID: userId, 
-        PlanetID: parseInt(planetId),
+        CitizenID: userId,
+        PlanetID: planetId,
       },
     });
 
@@ -73,8 +223,8 @@ export const getModificationRequestDetails = async (req: Request, res: Response)
 
     const proposal = await PlanetProposal.findOne({
       where: {
-        ProposalID: parseInt(requestId),
-        PlanetID: parseInt(planetId),
+        ProposalID: requestId,
+        PlanetID: planetId,
       },
       include: [
         { model: Planet, as: 'Planet' },
@@ -92,11 +242,10 @@ export const getModificationRequestDetails = async (req: Request, res: Response)
   }
 };
 
-// Cast a vote (For/Against) on the pending request (Citizen only)
 export const castVoteOnRequest = async (req: Request, res: Response) => {
   try {
     const { planetId, requestId } = req.params;
-    const { voteType } = req.body; // 'For' or 'Against'
+    const { voteType } = req.body;
     const userId = res.locals.user.id;
     const userRole = res.locals.user.role;
 
@@ -106,8 +255,8 @@ export const castVoteOnRequest = async (req: Request, res: Response) => {
 
     const citizen = await Citizen.findOne({
       where: {
-        CitizenID: userId, 
-        PlanetID: parseInt(planetId),
+        CitizenID: userId,
+        PlanetID: planetId,
       },
     });
 
@@ -117,9 +266,9 @@ export const castVoteOnRequest = async (req: Request, res: Response) => {
 
     const proposal = await PlanetProposal.findOne({
       where: {
-        ProposalID: parseInt(requestId),
-        PlanetID: parseInt(planetId),
-        Status: 'Pending', // Only allow voting on pending proposals
+        ProposalID: requestId,
+        PlanetID: planetId,
+        Status: 'Pending',
       },
     });
 
@@ -127,11 +276,10 @@ export const castVoteOnRequest = async (req: Request, res: Response) => {
       return res.status(404).json({ error: 'Pending modification request not found' });
     }
 
-    // Check if the citizen has already voted on this proposal
     const existingVote = await Vote.findOne({
       where: {
         ProposalID: parseInt(requestId),
-        VoterID: userId,
+        CitizenID: userId,
       },
     });
 
@@ -140,16 +288,17 @@ export const castVoteOnRequest = async (req: Request, res: Response) => {
     }
 
     if (!['For', 'Against'].includes(voteType)) {
-      return res.status(400).json({ error: 'Invalid vote type. Must be "For" or "Against"' });
+      return res.status(400).json({ error: "Invalid vote type. Must be 'For' or 'Against'" });
     }
 
-    await Vote.create({
+    const vote = await Vote.create({
+      CitizenID: userId,
       ProposalID: parseInt(requestId),
-      VoterID: userId,
-      VoteType: voteType,
+      VoteChoice: voteType,
+      VoteDate: new Date(),
     });
 
-    res.status(201).json({ message: 'Vote cast successfully' });
+    res.status(201).json(vote);
   } catch (error: unknown) {
     res.status(500).json({ error: (error as Error).message });
   }

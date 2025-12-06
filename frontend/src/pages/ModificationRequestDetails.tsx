@@ -27,8 +27,8 @@ export function ModificationRequestDetails() {
 
       setLoading(true);
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/planets/${planetId}/modification-requests/${requestId}`, {
-          headers: {},
+        const response = await fetch(`/api/planets/${planetId}/modification-requests/${requestId}`, {
+          credentials: 'include',
         });
 
         if (response.ok) {

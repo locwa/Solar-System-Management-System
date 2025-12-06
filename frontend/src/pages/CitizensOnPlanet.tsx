@@ -27,8 +27,8 @@ export function CitizensOnPlanet() {
 
       setLoading(true);
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/planets/${planetId}/citizens`, {
-          headers: {},
+        const response = await fetch(`/api/planets/${planetId}/citizens`, {
+          credentials: 'include',
         });
 
         if (response.ok) {

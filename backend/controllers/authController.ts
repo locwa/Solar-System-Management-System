@@ -1,94 +1,106 @@
-import { Request, Response, NextFunction } from "express";
+import { Request, Response } from "express";
 import bcrypt from "bcrypt";
 import User from "../models/User";
-import { validationResult } from "express-validator";
 
 declare module "express-session" {
   interface SessionData {
     user?: {
       id: number;
-      username: string;
+      name: string;
       role: string;
       isGalactic: boolean;
     };
   }
 }
 
-// Register new user
-export const register = async (req: Request, res: Response) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
+// LOGIN WITH REGISTRATION
 
-  const { username, password, fullName, role } = req.body;
-
-  try {
-    const hashedPassword = await bcrypt.hash(password, 10);
-    const user = await User.create({
-      Username: username,
-      Password: hashedPassword,
-      FullName: fullName,
-      Role: role || "Citizen", // Default role
-    });
-    res.status(201).json({ message: "User registered successfully", userId: user.UserID });
-  } catch (error: unknown) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-};
-
-// Login user
 export const login = async (req: Request, res: Response) => {
-  const errors = validationResult(req);
-  if (!errors.isEmpty()) {
-    return res.status(400).json({ errors: errors.array() });
-  }
+    const { Username, Password, rememberMe } = req.body;
 
-  const { username, password } = req.body;
+    try {
+      const user = await User.findOne({ where: { Username } });
+      if (!user) return res.status(404).json({ message: "User not found" });
 
-  try {
-    const user = await User.findOne({ where: { Username: username } });
-    if (!user) {
-      return res.status(400).json({ message: "Invalid credentials" });
+      const match = await bcrypt.compare(Password, user.Password);
+      if (!match) return res.status(401).json({ message: "Incorrect password" });
+
+      req.session.user = {
+        id: user.UserID,
+        name: user.FullName,
+        role: user.Role,
+        isGalactic: user.Role === 'Galactic Leader'
+      };
+
+      // Remember me (7 days)
+      if (rememberMe) {
+        req.session.cookie.maxAge = 1000 * 60 * 60 * 24 * 7;
+      } else {
+        req.session.cookie.expires = undefined;
+      }
+
+      res.json({
+        message: "Login successful",
+        user: req.session.user
+      });
+
+    } catch (err: unknown) {
+      res.status(500).json({ error: (err as Error).message });
     }
+  };
 
-    const isMatch = await bcrypt.compare(password, user.Password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
 
-    // Set user in session
-    req.session.user = {
-      id: user.UserID,
-      username: user.Username,
-      role: user.Role,
-      isGalactic: user.Role === "Galactic Leader",
-    };
+// CREATING A REGISTRATION FOR THE SOLAR SYSTEM
 
-    res.status(200).json({ message: "Logged in successfully", user: req.session.user });
-  } catch (error: unknown) {
-    res.status(500).json({ error: (error as Error).message });
-  }
-};
-
-// Logout user
 export const logout = (req: Request, res: Response) => {
-  req.session.destroy((err) => {
-    if (err) {
-      return res.status(500).json({ message: "Could not log out, please try again" });
-    }
-    res.clearCookie("sid"); // Clear session cookie
-    res.status(200).json({ message: "Logged out successfully" });
+  req.session.destroy(() => {
+    res.json({ message: "Logged out successfully" });
   });
 };
 
-// Get current user details
-export const getMe = (req: Request, res: Response) => {
-  if (req.session && req.session.user) {
-    // Exclude sensitive information like isGalactic if not needed on frontend
-    const { id, username, role } = req.session.user;
-    return res.status(200).json({ user: { id, username, role } });
-  } else {
-    return res.status(401).json({ message: "Not authenticated" });
+export const register = async (req: Request, res: Response) => {
+    const { Username, Password, FullName, Role } = req.body;
+
+    try {
+      const userExists = await User.findOne({ where: { Username } });
+      if (userExists) return res.status(400).json({ message: "Username already taken" });
+
+      const hashedPassword = await bcrypt.hash(Password, 10);
+
+      const newUser = await User.create({
+        Username,
+        Password: hashedPassword,
+        FullName,
+        Role,
+        // Role is already set
+      });
+
+      res.json({
+        message: "User registered successfully",
+        user: {
+          id: newUser.UserID,
+          username: newUser.Username,
+          role: newUser.Role
+        }
+      });
+
+    } catch (err: unknown) {
+      res.status(500).json({ error: (err as Error).message });
+    }
+  };
+
+// Get a list of all users (Galactic Leader only)
+export const listUsers = async (req: Request, res: Response) => {
+  try {
+    if (res.locals.user.role !== 'Galactic Leader') {
+      return res.status(403).json({ error: 'Unauthorized' });
+    }
+
+    const users = await User.findAll({
+      attributes: ['UserID', 'Username', 'FullName', 'Role'], // Only return necessary user info
+    });
+    res.json(users);
+  } catch (error: unknown) {
+    res.status(500).json({ error: (error as Error).message });
   }
 };

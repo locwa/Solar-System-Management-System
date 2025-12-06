@@ -31,8 +31,8 @@ export function CitizenDetails() {
 
       setLoading(true);
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/citizens/${citizenId}`, {
-          headers: {},
+        const response = await fetch(`/api/citizens/${citizenId}`, {
+          credentials: 'include',
         });
 
         if (response.ok) {

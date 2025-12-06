@@ -25,7 +25,7 @@ export function CreateCitizen() {
 
       setLoading(true);
       try {
-        const usersResponse = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/users`);
+        const usersResponse = await fetch(`/api/auth/users`, { credentials: 'include' });
         const usersData: User[] = usersResponse.ok ? await usersResponse.json() : [];
 
         setUsers(usersData.filter(u => u.Role !== 'Galactic Leader' && u.Role !== 'Planetary Leader'));
@@ -58,13 +58,14 @@ export function CreateCitizen() {
     }
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/citizens`, {
+      const response = await fetch(`/api/citizens`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: 'include',
         body: JSON.stringify({
-          PlanetID: parseInt(planetId!), // Use non-null assertion
+          PlanetID: parseInt(planetId!),
           UserID: parseInt(selectedUser),
         }),
       });

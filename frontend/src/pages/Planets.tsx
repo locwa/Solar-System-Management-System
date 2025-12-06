@@ -22,10 +22,8 @@ export function Planets() {
 
       setLoading(true);
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/planets`, {
-          headers: {
-            // Add any necessary headers for authentication if not handled by cookies
-          },
+        const response = await fetch(`${import.meta.env.LOCAL_URL}/api/planets`, {
+          credentials: 'include',
         });
 
         if (response.ok) {

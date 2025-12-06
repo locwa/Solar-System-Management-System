@@ -25,7 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // For this example, we'll assume a session endpoint '/api/auth/me'
     const fetchUser = async () => {
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/me`);
+        const response = await fetch(`/api/auth/me`, { credentials: 'include' });
         if (response.ok) {
           const userData: User = await response.json();
           setUser(userData);
@@ -49,7 +49,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const logout = async () => {
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/auth/logout`, { method: 'POST' });
+      const response = await fetch(`/api/auth/logout`, { method: 'POST', credentials: 'include' });
       if (response.ok) {
         setUser(null);
       } else {

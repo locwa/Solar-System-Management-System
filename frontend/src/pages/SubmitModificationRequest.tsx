@@ -23,11 +23,12 @@ export function SubmitModificationRequest() {
     setSuccess(null);
 
     try {
-      const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/planets/${planetId}/modification-requests`, {
+      const response = await fetch(`/api/planets/${planetId}/modification-requests`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
+        credentials: 'include',
         body: JSON.stringify({
           title: title,
           description: description,

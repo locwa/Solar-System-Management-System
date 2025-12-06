@@ -1,43 +1,20 @@
-import { Sequelize, Options } from 'sequelize';
-import config from './config.json';
+import { Sequelize } from 'sequelize';
 
-interface DbConfig {
-  username?: string;
-  password?: string;
-  database: string;
-  host?: string;
-  port?: number;
-  dialect: Options["dialect"];
-  url?: string;
-  dialectOptions?: {
-    ssl?: {
-      require?: boolean;
-      rejectUnauthorized?: boolean;
-    };
-  };
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error('DATABASE_URL environment variable is not set');
 }
 
-interface Config {
-  development: DbConfig;
-  test: DbConfig;
-  production: DbConfig;
-  [key: string]: DbConfig; // Allow dynamic indexing
-}
-
-const env = process.env.NODE_ENV || 'development';
-const dbConfig: DbConfig = (config as Config)[env];
-
-const sequelize = new Sequelize(
-  dbConfig.database,
-  dbConfig.username || '',
-  dbConfig.password || '',
-  {
-    host: dbConfig.host,
-    port: dbConfig.port,
-    dialect: dbConfig.dialect,
-    dialectOptions: dbConfig.dialectOptions,
-    logging: false,
-  }
-);
+const sequelize = new Sequelize(databaseUrl, {
+  dialect: 'postgres',
+  dialectOptions: {
+    ssl: {
+      require: true,
+      rejectUnauthorized: false
+    }
+  },
+  logging: false,
+});
 
 export default sequelize;

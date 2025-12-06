@@ -1,64 +1,95 @@
 import express from 'express';
-import { authenticateSession } from '../middleware/sessionAuth';
-import { authorizeRoles } from '../middleware/roleAuth';
-import {
-  createCitizen,
-  getCitizenDetails, // Renamed from getCitizenById
-  removeCitizen,    // Renamed from deleteCitizen
-  requestCitizenshipChange,
-  getCitizenshipRequestStatus,
-  listCitizensOnPlanet, // Renamed from getCitizensOnPlanet
-  getCitizenProfile,
-} from '../controllers/citizenController';
+import * as citizenController from '../controllers/citizenController';
+import * as proposalController from '../controllers/proposalController';
+import { authenticateSession, checkRole } from '../middleware/sessionAuth';
 
 const router = express.Router();
 
 // Planetary Leader Routes
-router.post(
-  '/',
+router.get('/planets/:planetId/citizens',
   authenticateSession,
-  authorizeRoles(['Planetary Leader']),
-  createCitizen
+  checkRole(['Planetary Leader']),
+  citizenController.listCitizensOnPlanet
 );
-router.get(
-  '/planet/:planetId',
+
+router.post('/citizens',
   authenticateSession,
-  authorizeRoles(['Planetary Leader']),
-  listCitizensOnPlanet // Using listCitizensOnPlanet
+  checkRole(['Planetary Leader']),
+  citizenController.createCitizen
 );
-router.delete(
-  '/:citizenId',
+
+router.delete('/citizens/:citizenId',
   authenticateSession,
-  authorizeRoles(['Planetary Leader']),
-  removeCitizen // Using removeCitizen
+  checkRole(['Planetary Leader']),
+  citizenController.removeCitizen
+);
+
+// Planetary Leader & Citizen Routes
+router.get('/citizens/:citizenId',
+  authenticateSession,
+  checkRole(['Planetary Leader', 'Citizen']),
+  citizenController.getCitizenDetails
 );
 
 // Citizen Routes
-router.post(
-  '/:citizenId/citizenship-request',
+router.get('/citizens/:citizenId/profile',
   authenticateSession,
-  authorizeRoles(['Citizen']),
-  requestCitizenshipChange
-);
-router.get(
-  '/:citizenId/citizenship-request',
-  authenticateSession,
-  authorizeRoles(['Citizen']),
-  getCitizenshipRequestStatus
-);
-router.get(
-  '/:citizenId/profile',
-  authenticateSession,
-  authorizeRoles(['Citizen']),
-  getCitizenProfile
+  checkRole(['Citizen']),
+  citizenController.getCitizenProfile
 );
 
-// General Citizen Route (accessible by both Planetary Leader and Citizen for details)
-router.get(
-  '/:citizenId',
+router.post('/citizens/:citizenId/citizenship-request',
   authenticateSession,
-  authorizeRoles(['Planetary Leader', 'Citizen']),
-  getCitizenDetails // Using getCitizenDetails
+  checkRole(['Citizen']),
+  citizenController.requestCitizenshipChange
+);
+
+router.get('/citizens/:citizenId/citizenship-request',
+  authenticateSession,
+  checkRole(['Citizen']),
+  citizenController.getCitizenshipRequestStatus
+);
+
+router.get('/planets/:planetId/modification-requests/:requestId',
+  authenticateSession,
+  checkRole(['Citizen']),
+  proposalController.getModificationRequestDetails
+);
+
+router.post('/planets/:planetId/modification-requests/:requestId/vote',
+  authenticateSession,
+  checkRole(['Citizen']),
+  proposalController.castVoteOnRequest
+);
+
+router.get('/citizen/proposals',
+  authenticateSession,
+  checkRole(['Citizen']),
+  proposalController.getProposalsForCitizen
+);
+
+router.get('/citizen/me',
+  authenticateSession,
+  checkRole(['Citizen']),
+  citizenController.getCitizenByUserId
+);
+
+router.get('/citizen/planets',
+  authenticateSession,
+  checkRole(['Citizen']),
+  citizenController.listAllPlanetsForCitizen
+);
+
+router.get('/planets/:planetId/citizenship-requests',
+  authenticateSession,
+  checkRole(['Planetary Leader']),
+  citizenController.getIncomingCitizenshipRequests
+);
+
+router.post('/planets/:planetId/citizenship-requests/:requestId/decide',
+  authenticateSession,
+  checkRole(['Planetary Leader']),
+  citizenController.decideCitizenshipRequest
 );
 
 export default router;

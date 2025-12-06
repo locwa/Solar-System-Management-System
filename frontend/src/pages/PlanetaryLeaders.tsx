@@ -29,8 +29,8 @@ export function PlanetaryLeaders() {
 
       setLoading(true);
       try {
-        const response = await fetch(`${import.meta.env.VITE_API_BASE_URL}/api/planetary-leaders`, {
-          headers: {},
+        const response = await fetch(`/api/planetary-leaders`, {
+          credentials: 'include',
         });
 
         if (response.ok) {
