@@ -3,7 +3,7 @@ import { Sequelize } from 'sequelize';
 
 let sequelize: Sequelize | null = null;
 
-export function getSequelize(): Sequelize {
+export default function getSequelize(): Sequelize {
   if (!sequelize) {
     const databaseUrl = process.env.DATABASE_URL;
     if (!databaseUrl) {
