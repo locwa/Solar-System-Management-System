@@ -3,7 +3,7 @@ dotenv.config();
 import express from 'express';
 import session from 'express-session';
 import cors from 'cors';
-import { getSequelize } from './config/database';
+import getSequelize from './config/database';
 import authRouter from './routes/authRoutes';
 import planetRouter from './routes/planetRoutes';
 import citizenRouter from './routes/citizenRoutes';
