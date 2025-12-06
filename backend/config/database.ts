@@ -1,20 +1,26 @@
+// config/database.ts
 import { Sequelize } from 'sequelize';
 
-const databaseUrl = process.env.DATABASE_URL;
+let sequelize: Sequelize | null = null;
 
-if (!databaseUrl) {
-  throw new Error('DATABASE_URL environment variable is not set');
-}
-
-const sequelize = new Sequelize(databaseUrl, {
-  dialect: 'postgres',
-  dialectOptions: {
-    ssl: {
-      require: true,
-      rejectUnauthorized: false
+export function getSequelize(): Sequelize {
+  if (!sequelize) {
+    const databaseUrl = process.env.DATABASE_URL;
+    if (!databaseUrl) {
+      throw new Error('DATABASE_URL environment variable is not set');
     }
-  },
-  logging: false,
-});
 
-export default sequelize;
+    sequelize = new Sequelize(databaseUrl, {
+      dialect: 'postgres',
+      dialectOptions: {
+        ssl: {
+          require: true,
+          rejectUnauthorized: false
+        }
+      },
+      logging: false,
+    });
+  }
+
+  return sequelize;
+}
