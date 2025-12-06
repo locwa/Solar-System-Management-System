@@ -20,23 +20,23 @@ app.use(cors({
 
 app.use(express.json());
 
-const PgSessionStore = pgSession(session);
+const pool = new pg.Pool({
+  connectionString: process.env.DATABASE_URL,
+});
 
+const PgStore = pgSession(session);
 app.use(session({
-  store: new PgSessionStore({
-    pool: new pg.Pool({
-      connectionString: process.env.DATABASE_URL,
-    }),
+  store: new PgStore({
+    pool,           // <-- reuse global pool
     tableName: 'session',
   }),
-
   secret: process.env.SESSION_SECRET || 'solar-system-secret-key',
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false,
+    secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 * 7,
+    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
     sameSite: 'lax'
   }
 }));
