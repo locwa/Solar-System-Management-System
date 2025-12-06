@@ -55,4 +55,4 @@ sequelize.sync().then(() => {
 });
 
 
-export const handler = serverless(app);
+export default serverless(app);
