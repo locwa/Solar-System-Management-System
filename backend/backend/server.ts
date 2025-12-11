@@ -13,8 +13,12 @@ import serverless from 'serverless-http';
 
 const app = express();
 
+const allowedOrigins = process.env.ALLOWED_ORIGINS 
+  ? process.env.ALLOWED_ORIGINS.split(',') 
+  : ['http://localhost:5000', 'http://0.0.0.0:5000'];
+
 app.use(cors({
-  origin: ['http://localhost:5000', 'http://0.0.0.0:5000'],
+  origin: allowedOrigins,
   credentials: true
 }));
 
@@ -34,10 +38,10 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: process.env.NODE_ENV === 'production', // HTTPS only in prod
+    secure: process.env.NODE_ENV === 'production',
     httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 * 7, // 7 days
-    sameSite: 'lax'
+    maxAge: 1000 * 60 * 60 * 24 * 7,
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
   }
 }));
 
