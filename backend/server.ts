@@ -24,26 +24,44 @@ app.use(cors({
 
 app.use(express.json());
 
-const pool = new pg.Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+if (process.env.DATABASE_URL) {
+  const pool = new pg.Pool({
+    connectionString: process.env.DATABASE_URL,
+    connectionTimeoutMillis: 5000,
+    idleTimeoutMillis: 10000,
+    max: 5,
+  });
 
-const PgStore = pgSession(session);
-app.use(session({
-  store: new PgStore({
-    pool,           // <-- reuse global pool
-    tableName: 'session',
-  }),
-  secret: process.env.SESSION_SECRET || 'solar-system-secret-key',
-  resave: false,
-  saveUninitialized: false,
-  cookie: {
-    secure: process.env.NODE_ENV === 'production',
-    httpOnly: true,
-    maxAge: 1000 * 60 * 60 * 24 * 7,
-    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
-  }
-}));
+  const PgStore = pgSession(session);
+  app.use(session({
+    store: new PgStore({
+      pool,
+      tableName: 'session',
+      createTableIfMissing: true,
+    }),
+    secret: process.env.SESSION_SECRET || 'solar-system-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    }
+  }));
+} else {
+  app.use(session({
+    secret: process.env.SESSION_SECRET || 'solar-system-secret-key',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === 'production',
+      httpOnly: true,
+      maxAge: 1000 * 60 * 60 * 24 * 7,
+      sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'lax'
+    }
+  }));
+}
 
 
 app.use('/api/auth', authRouter);
