@@ -80,7 +80,6 @@ exports.getPlanet = getPlanet;
 const listPlanets = async (req, res) => {
     try {
         const planets = await Planet_1.default.findAll();
-        console.log(planets);
         res.json(planets);
     }
     catch (error) {

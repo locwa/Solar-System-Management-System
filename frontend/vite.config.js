@@ -13,9 +13,8 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'https://solar-system-management-system.vercel.app',
+        target: 'https://solar-system-backend-production.up.railway.app/',
         changeOrigin: true,
-        secure: false,
       }
     }
   }

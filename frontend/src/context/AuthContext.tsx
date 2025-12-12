@@ -25,7 +25,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // For this example, we'll assume a session endpoint '/api/auth/me'
     const fetchUser = async () => {
       try {
-        const response = await fetch(`/api/auth/me`, { credentials: 'include' });
+        const response = await fetch(`https://solar-system-backend-production.up.railway.app/api/auth/me`, { credentials: 'include' });
         if (response.ok) {
           const userData: User = await response.json();
           setUser(userData);
@@ -47,9 +47,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(userData);
   };
 
+  const BASE_URL = "solar-system-backend-production.up.railway.app"
+
   const logout = async () => {
     try {
-      const response = await fetch(`/api/auth/logout`, { method: 'POST', credentials: 'include' });
+      const response = await fetch(`https://solar-system-backend-production.up.railway.app/api/auth/logout`, { method: 'POST', credentials: 'include' });
       if (response.ok) {
         setUser(null);
       } else {

@@ -19,6 +19,8 @@ export function Login() {
     const [success, setSuccess] = useState("");
     const [isLoading, setIsLoading] = useState(false);
 
+    const BASE_URL = "solar-system-backend-production.up.railway.app"
+
     useEffect(() => {
       if (!loading && user) {
         navigate("/", { replace: true });
@@ -44,7 +46,7 @@ export function Login() {
         setError("");
 
         try {
-            const response = await fetch("/api/auth/login", {
+            const response = await fetch(`https://solar-system-backend-production.up.railway.app/api/auth/login`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
@@ -88,7 +90,7 @@ export function Login() {
         }
 
         try {
-            const response = await fetch("/api/auth/register", {
+            const response = await fetch(`https://solar-system-backend-production.up.railway.app/api/auth/register`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json",
