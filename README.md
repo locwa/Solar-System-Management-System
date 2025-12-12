@@ -1,0 +1,1 @@
+https://solar-system-frontend-production.up.railway.app/
